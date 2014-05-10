@@ -39,6 +39,13 @@ namespace DCPU_16
             return true;
         }
 
+        public bool DoStep()
+        {
+            //return (P.DoAction(P.Memory[P.InstructionPointer]) && (P.InstructionPointer < P.MemorySize));
+            //P.Step(P.InstructionPointer);
+            return true;
+        }
+
        /*  public void CheckErrors()
            {
                if(P.Error == 0)

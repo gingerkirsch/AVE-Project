@@ -36,6 +36,8 @@ namespace DCPU_16
     #region CPU
     public class Processor
     {
+        public static readonly int MaxValue = 99999; //for demonstration
+        public static readonly int MinValue = -9999;//for demonstration
         public Dictionary<ushort, Operation> Actions { get; private set; }
         public static ushort[] _RAM;
         public static uint RAMSize = 0x10000u;

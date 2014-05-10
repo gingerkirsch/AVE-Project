@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DCPU_16
 {
-    public class Decryptor
+    public static class Decryptor
     {
         public static Dictionary<int, string> Errors { get; private set; }
         public static Dictionary<int, string> Commands { get; private set; }

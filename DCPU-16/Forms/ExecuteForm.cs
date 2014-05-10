@@ -29,9 +29,9 @@ namespace DCPU_16.Forms
             Output.Text = output;
         }
 
-        /*private void ExecuteForm_FormClosed(object sender, FormClosedEventArgs e)
+        private void ExecuteForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             Form1.HasDump = false;
-        }*/
+        }
     }
 }
