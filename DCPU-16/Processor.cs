@@ -3,118 +3,123 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-
-#region operand
-public class operand 
+namespace DCPU_16
 {
-    public ushort _value;
-    public int _type;
-    public const int REG = 0;
-    public const int PC = 1;
-    public const int SP = 2;
-    public const int EX = 3;
-    public const int RAM = 4;
-    public const int LIT = 5;
-    public const int STK = 6;
 
-    public operand(): this(0,0){}
+    #region operand
+    public class operand
+    {
+        public ushort _value;
+        public int _type;
+        public const int REG = 0;
+        public const int PC = 1;
+        public const int SP = 2;
+        public const int EX = 3;
+        public const int RAM = 4;
+        public const int LIT = 5;
+        public const int STK = 6;
 
-    public operand(int type, ushort value) {
-        _type = type;
-        _value = value;
+        public operand() : this(0, 0) { }
+
+        public operand(int type, ushort value)
+        {
+            _type = type;
+            _value = value;
+        }
     }
-}
-#endregion 
+    #endregion
 
-#region operation
-public delegate void Operation(operand a, operand b);
-#endregion
+    #region operation
+    public delegate void Operation(operand a, operand b);
+    #endregion
 
-#region CPU
-public class Processor {
-    public Dictionary<ushort, Operation> Actions { get; private set; }
-    public static ushort[] _RAM;
-    public static uint RAMSize = 0x10000u;
-    private ushort[] _Register;
-    private const uint RegisterCount = 8;
-    private const string RegisterOrder = "ABCXYZIJ";
-    private const int _A = 0;
-    private const int _B = 1;
-    private const int _C = 2;
-    private const int _X = 3;
-    private const int _Y = 4;
-    private const int _Z = 5;
-    private const int _I = 6;
-    private const int _J = 7;
-    private ushort _PC;
-    private ushort _SP;
-    private ushort _EX;
-    private ushort _IA;
-    private uint _Cycles;
-    private bool _IntEnabled;
-    private System.Collections.Generic.Queue<ushort> _IntQueue;
-    private int _CycleDebt;
+    #region CPU
+    public class Processor
+    {
+        public Dictionary<ushort, Operation> Actions { get; private set; }
+        public static ushort[] _RAM;
+        public static uint RAMSize = 0x10000u;
+        private ushort[] _Register;
+        private const uint RegisterCount = 8;
+        private const string RegisterOrder = "ABCXYZIJ";
+        private const int _A = 0;
+        private const int _B = 1;
+        private const int _C = 2;
+        private const int _X = 3;
+        private const int _Y = 4;
+        private const int _Z = 5;
+        private const int _I = 6;
+        private const int _J = 7;
+        private ushort _PC;
+        private ushort _SP;
+        private ushort _EX;
+        private ushort _IA;
+        private uint _Cycles;
+        private bool _IntEnabled;
+        private System.Collections.Generic.Queue<ushort> _IntQueue;
+        private int _CycleDebt;
 
-    public uint Cycles { get { return _Cycles; } }
-    public uint ClockRatekHz { get; set; }
-    public double ClockPeriodSec { get { return (double).001 / (double)ClockRatekHz; } }
-    public double ElapsedTimeSec { get { return (double)Cycles * ClockPeriodSec; } }
+        public uint Cycles { get { return _Cycles; } }
+        public uint ClockRatekHz { get; set; }
+        public double ClockPeriodSec { get { return (double).001 / (double)ClockRatekHz; } }
+        public double ElapsedTimeSec { get { return (double)Cycles * ClockPeriodSec; } }
 
-    public Processor(int memorySize) {
-        RAMSize = 0x10000u;
-        ClockRatekHz = 100; 
-        _RAM = new ushort[RAMSize];
-        _Register = new ushort[RegisterCount];
-        _IntQueue = new Queue<ushort>();
-    
-        ClearMemory();
-        Reset();
-        _RAM[0] = 0x841a;
+        public Processor(int memorySize)
+        {
+            RAMSize = 0x10000u;
+            ClockRatekHz = 100;
+            _RAM = new ushort[RAMSize];
+            _Register = new ushort[RegisterCount];
+            _IntQueue = new Queue<ushort>();
 
-        Actions = new Dictionary<ushort, Operation>
-                          {
-                              {0x01, opSET},
-                              {0x02, opADD},
-                              {0x03, opSUB},
-                              {0x04, opMUL},
-                              {0x05, opMLI},
-                              {0x06, opDIV},
-                              {0x07, opDVI},
-                              {0x08, opMOD},
-                             // {0x09, opMDI},
-                              {0x0a, opAND},
-                              {0x0b, opBOR},
-                              {0x0c, opXOR},
-                              {0x0d, opSHR},
-                              {0x0e, opASR},
-                              {0x0f, opSHL},
-                              {0x10, opIFB},
-                              {0x11, opIFC},
-                              {0x12, opIFE},
-                              {0x13, opIFN},
-                              {0x14, opIFG},
-                              {0x15, opIFA},
-                              {0x16, opIFL},
-                              {0x17, opIFU},
-                              //{0x18, opRESERVED}, 
-                              //{0x19, opRESERVED},
+            ClearMemory();
+            Reset();
+            _RAM[0] = 0x841a;
+
+            Actions = new Dictionary<ushort, Operation>
+                              {
+                                  {0x01, opSET},
+                                  {0x02, opADD},
+                                  {0x03, opSUB},
+                                  {0x04, opMUL},
+                                  {0x05, opMLI},
+                                  {0x06, opDIV},
+                                  {0x07, opDVI},
+                                  {0x08, opMOD},
+                                 // {0x09, opMDI},
+                                  {0x0a, opAND},
+                                  {0x0b, opBOR},
+                                  {0x0c, opXOR},
+                                  {0x0d, opSHR},
+                                  {0x0e, opASR},
+                                  {0x0f, opSHL},
+                                  {0x10, opIFB},
+                                  {0x11, opIFC},
+                                  {0x12, opIFE},
+                                  {0x13, opIFN},
+                                  {0x14, opIFG},
+                                  {0x15, opIFA},
+                                  {0x16, opIFL},
+                                  {0x17, opIFU},
+                                  //{0x18, opRESERVED}, 
+                                  //{0x19, opRESERVED},
                              
-                              //{0x1a, opADX},
-                              {0x1a, opREAD},       //introduced by us instruction with demonstrative purposes
+                                  //{0x1a, opADX},
+                                  {0x1a, opREAD},       //introduced by us instruction with demonstrative purposes
                               
-                              {0x1b, opSBX},
-                              //{0x1c, opRESERVED},
-                              //{0x1d, opRESERVED},
-                              {0x1e, opSTI},
-                              {0x1f, opSTD}
+                                  {0x1b, opSBX},
+                                  //{0x1c, opRESERVED},
+                                  //{0x1d, opRESERVED},
+                                  {0x1e, opSTI},
+                                  {0x1f, opSTD}
 
-                          };
+                              };
         }
 
         public string RegToString()
         {
             StringBuilder output = new StringBuilder();
-                for (int i = 0; i < RegisterCount; i++)
+            for (int i = 0; i < RegisterCount; i++)
             {
                 output.Append(RegisterOrder[i] + ":  " + _Register[i].ToString("X4") + " ");
             }
@@ -139,8 +144,8 @@ public class Processor {
         public ushort IA { get { return _IA; } }
         public ushort RAM(uint addr) { return _RAM[addr]; }
 
-        private static int[] _basicCycleCost = {0,1,2,2,2,2,3,3,3,3,1,1,1,1,1,1,2,2,2,2,2,2,2,2,0,0,3,3,0,0,2,2 };
-        private static int[] _specialCycleCost = {0,3,0,0,0,0,0,0,4,1,1,3,2,0,0,0,2,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+        private static int[] _basicCycleCost = { 0, 1, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 3, 3, 0, 0, 2, 2 };
+        private static int[] _specialCycleCost = { 0, 3, 0, 0, 0, 0, 0, 0, 4, 1, 1, 3, 2, 0, 0, 0, 2, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
         public void Reset()
         {
@@ -786,7 +791,8 @@ public class Processor {
             ushort _a = readValue(a);
             _IntEnabled = (_a == 0);
         }
-        
+
     }
 
-#endregion
+    #endregion
+}
