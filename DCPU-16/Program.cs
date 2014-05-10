@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using DCPU_16.Forms;
 
 namespace DCPU_16
 {
@@ -16,7 +17,7 @@ namespace DCPU_16
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new InputForm());
         }
     }
 }

@@ -482,11 +482,11 @@ namespace DCPU_16
 
         private void opREAD(operand b, operand a)
         {
-            /*var value = Executor.Read();
+            var value = Executor.Read();
             Console.WriteLine(value.ToString());
 
             ushort _b = readValue(b);
-            writeValue(b, (ushort)value);*/
+            writeValue(b, (ushort)value);
 
         }
 
