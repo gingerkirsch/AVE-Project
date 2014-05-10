@@ -1,0 +1,2 @@
+0×06: MOD a, b – sets a to a%b. if b==0, sets a to 0 instead.
+

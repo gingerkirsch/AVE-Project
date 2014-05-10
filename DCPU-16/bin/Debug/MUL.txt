@@ -1,0 +1,1 @@
+0x04: MUL a, b – sets a to a*b, sets O to ((a*b)>>16)&0xffff.

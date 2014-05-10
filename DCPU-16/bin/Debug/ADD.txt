@@ -1,0 +1,1 @@
+0x02: ADD a, b – sets a to a+b, sets O to 0×0001 if there’s an overflow, 0×0 otherwise.

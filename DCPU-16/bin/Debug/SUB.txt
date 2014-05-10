@@ -1,0 +1,1 @@
+0x003: SUB a, b – sets a to a-b, sets O to 0xffff if there is an underflow, 0x0 otherwise.
