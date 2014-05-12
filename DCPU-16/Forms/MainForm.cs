@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using DCPU_16.Forms;
 using DCPU_16.Properties;
+using System.Text.RegularExpressions;
 
 namespace DCPU_16
 {
@@ -23,6 +24,12 @@ namespace DCPU_16
         private const int CodeSize = 99;
         private readonly HelpForm _help = new HelpForm();
         public static bool HasDump { get; set; }
+
+        private Regex ADDR_PATTERN = new Regex("[0-9]+");
+        private String ADDR_WARNING = "Can be natural number or zero";
+        private Regex VALUE_PATTERN = new Regex("\\b(?=\\w)[0-9]{1,2}\\b(?!\\w)");
+        private String VALUE_WARNING = "Operand can be value (0-31) or register (ABCXYZIJ)";
+        private Regex REG_PATTERN = new Regex("\\b(?=\\w)[abcxyzijABCXYZIJ]\\b(?!\\w)");
 
         public Form1()
         {
@@ -147,7 +154,10 @@ namespace DCPU_16
             D.UpdateDamp(E.GetDump(0, 30));
             E.Execute();
             D.UpdateOutput(Executor.Output.ToString());
-            D.UpdateDamp(E.GetDump(0, 30));
+            //this prints ram
+            D.UpdateDamp(E.GetDump(0,10));
+            //this prints registers and overrides the last
+            D.UpdateDamp(E.P.RegToString());
         }
 
         private void toolBoxToolStripMenuItem_Click(object sender, EventArgs e)
@@ -176,54 +186,82 @@ namespace DCPU_16
         {
             try
             {
+                if (!ADDR_PATTERN.IsMatch(CommandAddress.Text))
+                {
+                    MessageBox.Show(ADDR_WARNING);
+                    return;
+                }
                 var index = Int32.Parse(CommandAddress.Text);
-                
                 int command;
                 Decryptor.Instructions.TryGetValue(CommandBox.SelectedIndex, out command);
 
+
                 //to fix annoying bug
                 command++;
+                Console.WriteLine("command " + command);
 
-                ushort a = 0x0000;
+                ushort word = 0x0000;
+                word = (ushort)(0x0000 | command);
+                Console.WriteLine("a " + Convert.ToString(word, 2));
+                int first_operand;
+                int second_operand;
 
-                a = (ushort)(0x0000 | command);
+                if (REG_PATTERN.IsMatch(OperandAddress.Text)) 
+                {
+                    Decryptor.Registers.TryGetValue(OperandAddress.Text.ToString().ToUpper(), out first_operand);
+                } else if(VALUE_PATTERN.IsMatch(OperandAddress.Text)){  //add <32
+                    first_operand = Int32.Parse(OperandAddress.Text);
+                } else {
+                    MessageBox.Show(VALUE_WARNING);
+                    return;
+                }
+                 
+                if (REG_PATTERN.IsMatch(OperandAddress2.Text))
+                {
+                    Decryptor.Registers.TryGetValue(OperandAddress2.Text.ToString().ToUpper(), out second_operand);
+                    second_operand = (ushort)(second_operand << 10);
+                    word = (ushort)(word | second_operand);
+                }
+                else
+                {
+                    if (VALUE_PATTERN.IsMatch(OperandAddress2.Text))
+                    {
+                        
+                        second_operand = Int32.Parse(OperandAddress2.Text);
 
-                Console.WriteLine("a " + Convert.ToString(a, 2));
+                        Console.WriteLine("second_operand-> " + second_operand);
+                        word = (ushort)((0x8400 + (second_operand << 10 )) | command) ;
+                        Console.WriteLine("WORD " + Convert.ToString(word, 2));
 
-                var operand = Int32.Parse(OperandAddress.Text);
+                    }
+                    else
+                    {
+                        MessageBox.Show(VALUE_WARNING);
+                        return;
+                    }
+                }
 
-                //our registers
-                int operand2;
                 
-                Console.WriteLine("reg " + OperandAddress2.Text);
-                D.UpdateOutput(Executor.Output.ToString());         //throws exception
-                Decryptor.Registers.TryGetValue(OperandAddress2.Text.ToString().ToUpper(), out operand2);
-                Console.WriteLine("operand2 " + operand2);
+                first_operand = (ushort)(first_operand << 5);
+                word = (ushort)(word | first_operand);
+              //  second_operand = (ushort)(second_operand << 10);
+               // word = (ushort)(word | second_operand);
 
-                ushort b = (ushort)(0x0084 + (operand << 2));
-                Console.WriteLine("b antes shift" + Convert.ToString(b, 2));
+                Console.WriteLine("word " + Convert.ToString(word, 2));
+                //ushort b = (ushort)(0x0084 + (operand << 2));
 
-                a = (ushort)(operand2 | a);
-                b = (ushort)(b << 8);
-                Console.WriteLine("b " + Convert.ToString(b, 2));
-                a = (ushort)(b | a);
-                Console.WriteLine("a " + Convert.ToString(a, 2));
-                //ushort value = (ushort)(operand << 10);
-                //a |= value;
 
                 //var result = command*100 + operand;
-                Console.WriteLine("a " + a);
-
-                ushort result = a;
+                ushort result = word;
                 if (_code.Add(index, result))
                 {
-                    Console.WriteLine("here");
+                    Console.WriteLine("dentro do if");
                     WriteInstruction(result, index);
-                }   //throws exception
+                }   
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return;
+                Console.WriteLine(ex.Message);
             }
         }
 
