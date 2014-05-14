@@ -27,7 +27,7 @@ namespace DCPU_16
             }
         }
 
-        public static void Write(string path, ushort[] p)
+        public static void Write(string path, string[] p)
         {
             var fs = new FileStream(path, FileMode.Create);
             var sw = new StreamWriter(fs);

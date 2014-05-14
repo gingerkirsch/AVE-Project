@@ -29,6 +29,7 @@ namespace DCPU_16
         private String ADDR_WARNING = "Can be natural number or zero";
         private Regex VALUE_PATTERN = new Regex("\\b(?=\\w)[0-9]{1,2}\\b(?!\\w)");
         private String VALUE_WARNING = "Operand can be value (0-31) or register (ABCXYZIJ)";
+        private String REG_WARNING = "Operand can be register only (ABCXYZIJ)";
         private Regex REG_PATTERN = new Regex("\\b(?=\\w)[abcxyzijABCXYZIJ]\\b(?!\\w)");
 
         public Form1()
@@ -40,10 +41,18 @@ namespace DCPU_16
 
             _code = new Code(CodeSize);
 
-            foreach (var command in Decryptor.Commands)
+            try
             {
-                CommandBox.Items.Add(command);
+                foreach (var command in Decryptor.Commands)
+                {
+                    CommandBox.Items.Add(command);
+                }
+                foreach (var command in Decryptor.NonBasicCommands) 
+                {
+                    CommandBox.Items.Add(command);
+                }
             }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
             CommandBox.SelectedIndex = 0;
 
             D.Show();
@@ -78,10 +87,17 @@ namespace DCPU_16
 
         private void Save()
         {
+                    
             var s = new SaveFileDialog { Filter = Filter };
-            if (s.ShowDialog() == DialogResult.OK)
+            if(s.ShowDialog() == DialogResult.OK)
             {
-                IO.Write(s.FileName, _code.ProgramArray);
+                string[] hexaArray = new string[_code.ProgramArray.Length];
+                for (int i = 0; i < _code.ProgramArray.Length; i++) {
+                    hexaArray[i] = Convert.ToString(_code.ProgramArray[i], 16);
+                
+                }
+
+                IO.Write(s.FileName, hexaArray);
             }
         }
 
@@ -125,6 +141,22 @@ namespace DCPU_16
             }
         }
 
+        private void CommandBox_SelectedIndexChanged(object sender, System.EventArgs e)
+        {
+            //Console.WriteLine("does this even gets called? " + CommandBox.SelectedIndex);
+            if (CommandBox.SelectedIndex > 26 && CommandBox.SelectedIndex < 34)
+            {
+                OperandAddress2.Enabled = false;
+                label5.Enabled = false; // im calling :/
+            }
+            else {
+                OperandAddress2.Enabled = true;
+                label5.Enabled = true;
+            
+            }
+
+        }
+
         private void WriteInstruction(int value, int index)
         {
             if (value > Processor.MaxValue || value < Processor.MinValue)
@@ -138,8 +170,36 @@ namespace DCPU_16
             }
 
             string instruction;
-            Decryptor.Commands.TryGetValue(value / 100, out instruction);
-            Program.Items.Insert(index, String.Format("{0:00}:\t{1}\t{2}\t[{3}]", index, instruction, value % 100, Convert.ToString(value, 16)));
+            Console.WriteLine("value " );
+           /* var command = 0;
+            
+            if (value < 20)
+            {
+                command = value; 
+            }
+            else{ */
+            var basicOrNon = value & 0x001f;
+
+            if (basicOrNon != 0)
+            {  
+            //basic
+            var command = value & 0x001f;
+            //}
+            Decryptor.Commands.TryGetValue(command, out instruction);
+            Program.Items.Insert(index, String.Format("{0:00}:\t{1}\t{2}{3}\t[{4}]", index, instruction, OperandAddress.Text.ToUpper(), 
+                ","+ OperandAddress2.Text.ToUpper(), Convert.ToString(value, 16)));
+            }
+            else{
+                var command = value & 0x03e0;
+                command >>= 5;
+
+                Decryptor.NonBasicCommands.TryGetValue(command, out instruction);
+                Program.Items.Insert(index, String.Format("{0:00}:\t{1}\t{2}{3}\t[{4}]", index, instruction, OperandAddress.Text.ToUpper(),
+                    "," + OperandAddress2.Text.ToUpper(), Convert.ToString(value, 16)));
+            
+            
+            
+            }
         }
 
         private void Run_Click(object sender, EventArgs e)
@@ -157,7 +217,7 @@ namespace DCPU_16
             //this prints ram
             D.UpdateDamp(E.GetDump(0,10));
             //this prints registers and overrides the last
-            D.UpdateDamp(E.P.RegToString());
+            D.UpdateRegisters(E.P.RegToString());
         }
 
         private void toolBoxToolStripMenuItem_Click(object sender, EventArgs e)
@@ -186,6 +246,7 @@ namespace DCPU_16
         {
             try
             {
+                
                 if (!ADDR_PATTERN.IsMatch(CommandAddress.Text))
                 {
                     MessageBox.Show(ADDR_WARNING);
@@ -193,59 +254,102 @@ namespace DCPU_16
                 }
                 var index = Int32.Parse(CommandAddress.Text);
                 int command;
+                ushort word = 0x0000;
+                
+                int first_operand;
+                int second_operand;
+              /*  int command;
+                Console.WriteLine(CommandBox.SelectedIndex);
+                
                 Decryptor.Instructions.TryGetValue(CommandBox.SelectedIndex, out command);
-
-
-                //to fix annoying bug
                 command++;
-                Console.WriteLine("command " + command);
-
+                Console.WriteLine(command);
                 ushort word = 0x0000;
                 word = (ushort)(0x0000 | command);
                 Console.WriteLine("a " + Convert.ToString(word, 2));
                 int first_operand;
-                int second_operand;
+                int second_operand;*/
 
-                if (REG_PATTERN.IsMatch(OperandAddress.Text)) 
-                {
-                    Decryptor.Registers.TryGetValue(OperandAddress.Text.ToString().ToUpper(), out first_operand);
-                } else if(VALUE_PATTERN.IsMatch(OperandAddress.Text)){  //add <32
-                    first_operand = Int32.Parse(OperandAddress.Text);
-                } else {
-                    MessageBox.Show(VALUE_WARNING);
-                    return;
-                }
-                 
-                if (REG_PATTERN.IsMatch(OperandAddress2.Text))
-                {
-                    Decryptor.Registers.TryGetValue(OperandAddress2.Text.ToString().ToUpper(), out second_operand);
-                    second_operand = (ushort)(second_operand << 10);
-                    word = (ushort)(word | second_operand);
-                }
-                else
-                {
-                    if (VALUE_PATTERN.IsMatch(OperandAddress2.Text))
+                if (CommandBox.SelectedIndex > 26){
+                    if (REG_PATTERN.IsMatch(OperandAddress.Text)) 
                     {
-                        
-                        second_operand = Int32.Parse(OperandAddress2.Text);
+                       // Console.WriteLine("CommandBox.SelectedIndex " + CommandBox.SelectedIndex);
+                        Decryptor.NonBasicInstructions.TryGetValue(CommandBox.SelectedIndex + 1, out command);
+                        //command++;
+                        Console.WriteLine("command non basic " + Convert.ToString(command, 2));
+                
+                        word = (ushort)(0x0000 | command);
+                       // Console.WriteLine("non basic code " + Convert.ToString(word, 2));
+                
 
-                        Console.WriteLine("second_operand-> " + second_operand);
-                        word = (ushort)((0x8400 + (second_operand << 10 )) | command) ;
-                        Console.WriteLine("WORD " + Convert.ToString(word, 2));
-
+                        Decryptor.Registers.TryGetValue(OperandAddress.Text.ToString().ToUpper(), out first_operand);
+                        word |= (ushort)(first_operand << 10);
+                        //Console.WriteLine(first_operand);
+                    } else {
+                        MessageBox.Show(REG_WARNING);
+                        return;
+                    }
+                } else {
+                    Decryptor.Instructions.TryGetValue(CommandBox.SelectedIndex, out command);
+                    command++;
+                    word = (ushort)(0x0000 | command);
+                    if (REG_PATTERN.IsMatch(OperandAddress.Text))
+                    {
+                        Decryptor.Registers.TryGetValue(OperandAddress.Text.ToString().ToUpper(), out first_operand);
+                        first_operand <<= 5;
+                       // Console.WriteLine("first_operand " + first_operand);
+                        word |= (ushort)first_operand;
+                       // Console.WriteLine("word " + word);
+                    }
+                    else if (VALUE_PATTERN.IsMatch(OperandAddress.Text))
+                    {  //add <32
+                        //Console.WriteLine("VALUE_PATTERN.IsMatch");
+                        first_operand = Int32.Parse(OperandAddress.Text);
+                        ///Console.WriteLine(first_operand);
                     }
                     else
                     {
                         MessageBox.Show(VALUE_WARNING);
                         return;
                     }
+
+                    if (REG_PATTERN.IsMatch(OperandAddress2.Text))
+                    {
+
+                        Decryptor.Registers.TryGetValue(OperandAddress2.Text.ToString().ToUpper(), out second_operand);
+                        second_operand = (ushort)(second_operand << 10);
+                        Console.WriteLine("second_operand " + second_operand); 
+
+                        word = (ushort)(word | second_operand);
+                    }
+                    else
+                    {
+                        if (VALUE_PATTERN.IsMatch(OperandAddress2.Text))
+                        {
+                            Console.WriteLine("VALUE_PATTERN.IsMatch");
+                            second_operand = Int32.Parse(OperandAddress2.Text);
+
+                            Console.WriteLine("second_operand-> " + second_operand);
+                            word = (ushort)((0x8400 + (second_operand << 10)) | word);
+                            Console.WriteLine("WORD " + Convert.ToString(word, 2));
+
+                        }
+                        else
+                        {
+                            MessageBox.Show(VALUE_WARNING);
+                            return;
+                        }
+                    }
+
+
                 }
 
+
+                //first_operand = (ushort)(first_operand << 5);
+                //word = (ushort)(word | first_operand);
                 
-                first_operand = (ushort)(first_operand << 5);
-                word = (ushort)(word | first_operand);
-              //  second_operand = (ushort)(second_operand << 10);
-               // word = (ushort)(word | second_operand);
+                //  second_operand = (ushort)(second_operand << 10);
+                // word = (ushort)(word | second_operand);
 
                 Console.WriteLine("word " + Convert.ToString(word, 2));
                 //ushort b = (ushort)(0x0084 + (operand << 2));
@@ -253,8 +357,14 @@ namespace DCPU_16
 
                 //var result = command*100 + operand;
                 ushort result = word;
+                Console.WriteLine(Convert.ToString(word, 2));
                 if (_code.Add(index, result))
                 {
+                    Console.WriteLine(Convert.ToString(word, 2));
+                    Console.WriteLine(result);
+                    Console.WriteLine(Convert.ToString(word, 16));
+
+                    Console.WriteLine(index);
                     Console.WriteLine("dentro do if");
                     WriteInstruction(result, index);
                 }   
@@ -289,7 +399,7 @@ namespace DCPU_16
             {
                 var index = Int32.Parse(CellAddress.Text);
                 if (_code.Add(index, 0))
-                {
+               {
                     WriteInstruction(0, index);
                 }
             }
@@ -366,6 +476,35 @@ namespace DCPU_16
             DataAdress.Text = Program.SelectedIndex.ToString();
             CommandAddress.Text = Program.SelectedIndex.ToString();
             CellAddress.Text = Program.SelectedIndex.ToString();
+        }
+        private void keyinput(object sender, KeyEventArgs e)
+        {
+
+            Console.WriteLine("I'm in keyinput! " + e.KeyValue);
+            if (Processor.keyboardFlag)
+            {
+                Console.WriteLine("--------keyboard flag set to true-----------");
+                Console.WriteLine("key value at moment ___ "+GetKeyValue(e.KeyValue));              
+                Executor.lastkeypressed = GetKeyValue(e.KeyValue);
+                Executor.handles[0].Set();
+            }
+            return;
+        }
+
+        private int GetKeyValue(int keyValue)
+        {
+            if (keyValue >= 48 && keyValue <= 57)
+            {
+                return keyValue - 48;
+            }
+            else if (keyValue >= 96 && keyValue <= 105)
+            {
+                return keyValue - 96;
+            }
+            else
+            {
+                return -1; // Not a number... do whatever...
+            }
         }
     }
 }

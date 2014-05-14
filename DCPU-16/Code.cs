@@ -39,7 +39,7 @@ namespace DCPU_16
                 Console.WriteLine("3");
 
                 ProgramArray[index] = value;
-                Position++;
+               //Position++;
                 return true;
             }
 
@@ -49,6 +49,9 @@ namespace DCPU_16
 
                 ProgramArray[index] = value;
             }
+
+            
+
             return false;
         }
 

@@ -44,6 +44,8 @@
             this.label4 = new System.Windows.Forms.Label();
             this.DataAdress = new System.Windows.Forms.TextBox();
             this.GroupBox2 = new System.Windows.Forms.GroupBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.OperandAddress2 = new System.Windows.Forms.TextBox();
             this.AddCommand = new System.Windows.Forms.Button();
             this.OperandAddress = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -70,7 +72,6 @@
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSplitButton1 = new System.Windows.Forms.ToolStripSplitButton();
             this.dfsdfToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.OperandAddress2 = new System.Windows.Forms.TextBox();
             this.Menu.ContentPanel.SuspendLayout();
             this.Menu.TopToolStripPanel.SuspendLayout();
             this.Menu.SuspendLayout();
@@ -239,6 +240,7 @@
             // 
             // GroupBox2
             // 
+            this.GroupBox2.Controls.Add(this.label5);
             this.GroupBox2.Controls.Add(this.OperandAddress2);
             this.GroupBox2.Controls.Add(this.AddCommand);
             this.GroupBox2.Controls.Add(this.OperandAddress);
@@ -253,11 +255,27 @@
             this.GroupBox2.TabStop = false;
             this.GroupBox2.Text = "Add Command";
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(2, 97);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(54, 13);
+            this.label5.TabIndex = 5;
+            this.label5.Text = "Operand2";
+            // 
+            // OperandAddress2
+            // 
+            this.OperandAddress2.Location = new System.Drawing.Point(57, 94);
+            this.OperandAddress2.Name = "OperandAddress2";
+            this.OperandAddress2.Size = new System.Drawing.Size(45, 20);
+            this.OperandAddress2.TabIndex = 4;
+            // 
             // AddCommand
             // 
-            this.AddCommand.Location = new System.Drawing.Point(107, 67);
+            this.AddCommand.Location = new System.Drawing.Point(108, 67);
             this.AddCommand.Name = "AddCommand";
-            this.AddCommand.Size = new System.Drawing.Size(47, 23);
+            this.AddCommand.Size = new System.Drawing.Size(46, 47);
             this.AddCommand.TabIndex = 1;
             this.AddCommand.Text = "Add";
             this.AddCommand.UseVisualStyleBackColor = true;
@@ -273,11 +291,11 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(8, 71);
+            this.label2.Location = new System.Drawing.Point(2, 72);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(48, 13);
+            this.label2.Size = new System.Drawing.Size(54, 13);
             this.label2.TabIndex = 2;
-            this.label2.Text = "Operand";
+            this.label2.Text = "Operand1";
             // 
             // label1
             // 
@@ -302,6 +320,7 @@
             this.CommandBox.Name = "CommandBox";
             this.CommandBox.Size = new System.Drawing.Size(143, 21);
             this.CommandBox.TabIndex = 0;
+            this.CommandBox.SelectedIndexChanged += new System.EventHandler(this.CommandBox_SelectedIndexChanged);
             // 
             // toolStrip1
             // 
@@ -477,21 +496,16 @@
             this.dfsdfToolStripMenuItem.Name = "dfsdfToolStripMenuItem";
             this.dfsdfToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
             // 
-            // OperandAddress2
-            // 
-            this.OperandAddress2.Location = new System.Drawing.Point(57, 94);
-            this.OperandAddress2.Name = "OperandAddress2";
-            this.OperandAddress2.Size = new System.Drawing.Size(45, 20);
-            this.OperandAddress2.TabIndex = 4;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(416, 326);
             this.Controls.Add(this.Menu);
+            this.KeyPreview = true;
             this.Name = "Form1";
             this.Text = "DCPU-16";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.keyinput);
             this.Resize += new System.EventHandler(this.Form1_Resize);
             this.Menu.ContentPanel.ResumeLayout(false);
             this.Menu.TopToolStripPanel.ResumeLayout(false);
@@ -515,6 +529,8 @@
         }
 
         #endregion
+
+       
 
         private System.Windows.Forms.ToolStripContainer Menu;
         private System.Windows.Forms.ToolStripDropDownButton File;
@@ -558,6 +574,7 @@
         private System.Windows.Forms.ToolStripMenuItem startDebuggingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem doStepToolStripMenuItem;
         private System.Windows.Forms.TextBox OperandAddress2;
+        private System.Windows.Forms.Label label5;
     }
 }
 
