@@ -29,9 +29,13 @@ namespace DCPU_16.Forms
             Output.Text = output;
         }
 
-        /*private void ExecuteForm_FormClosed(object sender, FormClosedEventArgs e)
+        public void UpdateRegisters(string registers) {
+            Registers.Text = registers;        
+        }
+
+        private void ExecuteForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             Form1.HasDump = false;
-        }*/
+        }
     }
 }

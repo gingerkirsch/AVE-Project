@@ -36,6 +36,8 @@ namespace DCPU_16
     #region CPU
     public class Processor
     {
+        public static readonly int MaxValue = 99999; //for demonstration
+        public static readonly int MinValue = -9999;//for demonstration
         public Dictionary<ushort, Operation> Actions { get; private set; }
         public static ushort[] _RAM;
         public static uint RAMSize = 0x10000u;
@@ -86,7 +88,7 @@ namespace DCPU_16
                                   {0x06, opDIV},
                                   {0x07, opDVI},
                                   {0x08, opMOD},
-                                 // {0x09, opMDI},
+                                  {0x09, opMDI},
                                   {0x0a, opAND},
                                   {0x0b, opBOR},
                                   {0x0c, opXOR},
@@ -104,8 +106,8 @@ namespace DCPU_16
                                   //{0x18, opRESERVED}, 
                                   //{0x19, opRESERVED},
                              
-                                  //{0x1a, opADX},
-                                  {0x1a, opREAD},       //introduced by us instruction with demonstrative purposes
+                                  {0x1a, opADX},
+                                  //{0x1a, opREAD},       //introduced by us instruction with demonstrative purposes
                               
                                   {0x1b, opSBX},
                                   //{0x1c, opRESERVED},
@@ -356,6 +358,12 @@ namespace DCPU_16
                         case 0x01:
                             opJSR(Tick_opA);
                             break;
+                        case 0x02:
+                            opREAD(Tick_opA);
+                            break;
+                        case 0x03:
+                            opREADK(Tick_opA);
+                            break;
                         case 0x08:
                             opINT(Tick_opA);
                             break;
@@ -371,10 +379,12 @@ namespace DCPU_16
                         case 0x0c:
                             opIAQ(Tick_opA);
                             break;
+                        
                     }
                 }
                 else // Basic opcodes
                 {
+                    
                     new Operation(Actions[Tick_opcode]).Invoke(Tick_opB, Tick_opA);
 
                 }
@@ -480,14 +490,37 @@ namespace DCPU_16
             return _RAM[_SP++];
         }
 
-        private void opREAD(operand b, operand a)
+        private void opREAD(operand a)
         {
             var value = Executor.Read();
             Console.WriteLine(value.ToString());
 
-            ushort _b = readValue(b);
-            writeValue(b, (ushort)value);
+            ushort _a = readValue(a);
+            writeValue(a, (ushort)value);
 
+        }
+
+        public static int lastkeypressed;
+
+        public static bool keyboardFlag = false;
+
+        private void opREADK(operand a)
+        {
+            Console.WriteLine("============ReadK in action=============");
+            keyboardFlag = true;
+            var value = Executor.ReadK();
+            Console.WriteLine("Value from the keys: ____ " + value);
+            
+
+            ushort _a = readValue(a);
+            writeValue(a, (ushort)value);
+            Console.WriteLine("============Exit ReadK=============");
+
+
+        }
+
+        private void opTRAP() {
+            return;
         }
 
         private void opSET(operand b, operand a)
@@ -564,6 +597,19 @@ namespace DCPU_16
 
         private void opMOD(operand b, operand a)
         {
+            ushort _a = readValue(a);
+            ushort _b = readValue(b);
+            if (_a == 0)
+            {
+                writeValue(b, 0);
+            }
+            else
+            {
+                writeValue(b, (ushort)(_a % _b));
+            }
+        }
+
+        private void opMDI(operand b, operand a) {
             ushort _a = readValue(a);
             ushort _b = readValue(b);
             if (_a == 0)

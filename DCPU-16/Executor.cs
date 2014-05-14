@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using DCPU_16.Forms;
 
 namespace DCPU_16
@@ -39,6 +41,13 @@ namespace DCPU_16
             return true;
         }
 
+        public bool DoStep()
+        {
+            //return (P.DoAction(P.Memory[P.InstructionPointer]) && (P.InstructionPointer < P.MemorySize));
+            //P.Step(P.InstructionPointer);
+            return true;
+        }
+
        /*  public void CheckErrors()
            {
                if(P.Error == 0)
@@ -59,6 +68,39 @@ namespace DCPU_16
             form.ShowDialog();
             Output.AppendFormat("Input value: {0}\n", form.Value);
             return form.Value;
+        }
+
+       /* private static IEnumerable<Key> KeysDown()
+        {
+            foreach (Key key in Enum.GetValues(typeof(Key)))
+            {
+                if (Keyboard.IsKeyDown(key))
+                    yield return key;
+            }
+        }*/
+
+        public static int lastkeypressed = 0;
+        public static AutoResetEvent[] handles = new AutoResetEvent[1];
+
+        public static int ReadK()
+        {
+            Console.WriteLine("========REadK in action in Executor=====");
+            Console.WriteLine("--P.keyboard flg is-----" + Processor.keyboardFlag);
+            if (!Processor.keyboardFlag) return 0;
+
+            handles[0] = new AutoResetEvent(false);
+            WaitHandle.WaitAny(handles);
+
+
+            Console.WriteLine("-----Key value in executor--" + lastkeypressed);
+            
+            //where wait
+
+            var value = lastkeypressed;
+            Output.AppendFormat("Input value: {0}\n", value);
+            Processor.keyboardFlag = false;
+            Console.WriteLine("a formiguinha carregou na tecla " + value);
+            return value;
         }
 
         public static void Write(int value)
@@ -91,7 +133,7 @@ namespace DCPU_16
 
             for (var i = 0; i < Processor.RAMSize; i++)
             {
-                Dump.AppendFormat("{0:00}:{1:0000}{2}", i, Processor._RAM[i], (i + 1) % 10 == 0 ? '\n' : '\t');
+                Dump.AppendFormat("{0:00}:{1:0000}{2}", i, (Processor._RAM[i] == 0 ? "0000" : Convert.ToString(Processor._RAM[i], 16)), (i + 1) % 10 == 0 ? '\n' : '\t');
             }
             return Dump.ToString();
         }
